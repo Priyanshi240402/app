@@ -1,0 +1,12 @@
+{
+  "functions": {
+    "api": {
+      "handler": "api/main.handler",
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  },
+  "routes": [
+    { "src": "/(.*)", "dest": "/api/main.py" }
+  ]
+}
