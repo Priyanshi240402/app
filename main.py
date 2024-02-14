@@ -38,5 +38,8 @@ def webhook():
     return jsonify(error="Invalid Request"), 400
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    try:
+        app.run(debug=False)
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
