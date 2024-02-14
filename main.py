@@ -15,7 +15,7 @@ def webhook():
         if mode and token:
             if mode == "subscribe" and token == verify_token:
                 print("WEBHOOK_VERIFIED")
-                return jsonify(challenge=challenge), 200
+                return jsonify(challenge=challenge, message="Webhook verified"), 200
             else:
                 return jsonify(error="Forbidden"), 403
 
