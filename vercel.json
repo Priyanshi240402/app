@@ -3,9 +3,8 @@
   "builds": [{ "src": "main.py", "use": "@vercel/python" }],
   "routes": [
     {
-      "src": "/webhook",
-      "methods": ["GET", "POST"],
-      "dest": "main.py"
+      "src": "/(.*)",
+      "dest": "/main.py"
     }
   ],
   "env": {
