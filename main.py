@@ -15,18 +15,18 @@ def webhook():
         if mode and token:
             if mode == "subscribe" and token == verify_token:
                 print("WEBHOOK_VERIFIED")
-                return jsonify(challenge=challenge, message="Webhook verified"), 200
+                return jsonify(challenge=challenge), 200
             else:
                 return jsonify(error="Forbidden"), 403
 
     elif request.method == 'POST':
         body = request.get_json()
 
-        if body and body.get("entry"):
+        if body and "entry" in body:
             entry = body["entry"][0]
-            if entry.get("changes"):
+            if "changes" in entry:
                 change = entry["changes"][0]
-                if change.get("value") and change["value"].get("messages"):
+                if "value" in change and "messages" in change["value"]:
                     message = change["value"]["messages"][0]
                     phone_number_id = change["value"]["metadata"]["phone_number_id"]
                     from_phone_number = message["from"]
@@ -35,11 +35,7 @@ def webhook():
                     data_store[phone_number_id] = {"from": from_phone_number, "msg_body": msg_body}
                     return jsonify(message="Webhook received"), 200
 
-    return jsonify(error="Invalid Request"), 400
+        return jsonify(error="Invalid Request"), 400
 
 if __name__ == '__main__':
-    try:
-        app.run(debug=False)
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
+    app.run(debug=False)
