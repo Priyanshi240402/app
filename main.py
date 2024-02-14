@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Verify token for GET API
 verify_token = "ACETECHVENTURES"
@@ -50,4 +52,4 @@ def webhook():
     return jsonify(error="Invalid Request"), 400
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False)
