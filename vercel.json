@@ -1,12 +1,12 @@
 {
-  "functions": {
-    "api": {
-      "handler": "api/main.handler",
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
+  "version": 2,
+  "builds": [
+    { "src": "main.py", "use": "@now/python" }
+  ],
   "routes": [
-    { "src": "/(.*)", "dest": "/api/main.py" }
-  ]
+    { "src": "/webhook", "dest": "main.py" }
+  ],
+  "env": {
+    "FLASK_ENV": "production"
+  }
 }
