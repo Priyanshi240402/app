@@ -1,3 +1,2 @@
-flask
-serverless-wsgi
-gunicorn
+Flask==2.1.5
+flask-lambda==1.6.0
