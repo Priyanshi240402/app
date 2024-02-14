@@ -1,14 +1,18 @@
-# api/main.py
-
 from flask import Flask, request, jsonify
-from serverless_wsgi import handle
+from flask_lambda import FlaskLambda
 
-app = Flask(__name__)
+app = FlaskLambda(__name__)
+
+# Verify token for GET API
+verify_token = "ACETECHVENTURES"
+
+# Dictionary to store phone_number_id, from, and msg_body
+data_store = {}
 
 @app.route('/webhook', methods=['GET', 'POST'])
 def webhook():
     if request.method == 'GET':
-        verify_token = "ACETECHVENTURES"
+        # GET API logic
         mode = request.args.get("hub.mode")
         token = request.args.get("hub.verify_token")
         challenge = request.args.get("hub.challenge")
@@ -17,9 +21,10 @@ def webhook():
             # Check the mode and token sent are correct
             if mode == "subscribe" and token == verify_token:
                 print("WEBHOOK_VERIFIED")
-                return challenge, 200  # Respond with 200 OK and challenge token
+                return jsonify(challenge=challenge, message="Webhook verified"), 200
             else:
-                return "Forbidden", 403  # Respond with '403 Forbidden' if verify tokens do not match
+                return jsonify(error="Forbidden"), 403  # Respond with '403 Forbidden' if verify tokens do not match
+
     elif request.method == 'POST':
         # POST API logic
         body = request.get_json()
@@ -38,12 +43,12 @@ def webhook():
                 msg_body = body["entry"][0]["changes"][0]["value"]["messages"][0]["text"]["body"]
 
                 # Save logic will come here
-                print(f"phone_number_id: {phone_number_id}, from: {from_phone_number}, msg_body: {msg_body}")
-                return "Webhook received", 200
+                data_store[phone_number_id] = {"from": from_phone_number, "msg_body": msg_body}
+                return jsonify(message="Webhook received"), 200
         else:
-            return "No data found", 200
+            return jsonify(error="No data found"), 200
 
-    return "Invalid Request", 400
+    return jsonify(error="Invalid Request"), 400
 
-def handler(event, context):
-    return handle(app, event, context)
+if __name__ == '__main__':
+    app.run(debug=True)
