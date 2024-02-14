@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
-from flask_lambda import FlaskLambda
 
-app = FlaskLambda(__name__)
+app = Flask(__name__)
 
 # Verify token for GET API
 verify_token = "ACETECHVENTURES"
