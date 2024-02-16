@@ -1,67 +1,76 @@
-from flask import Flask, request, jsonify
-app = Flask(__name__)
+from flask import Flask, jsonify, request
 
-# Verify token for GET API
-verify_token = "ACETECHVENTURES"
+app = Flask(_name_)
 
-# Dictionary to store phone_number_id, from, and msg_body
-data_store = {}
+# Verify Token defined when configuring the webhook
+verify_token = "ACE_TECH_TO_STOQ"
 
-@app.route('/webhook', methods=['GET', 'POST'])
-def webhook():
-    if request.method == 'GET':
-        # GET API logic
-        mode = request.args.get("hub.mode")
-        token = request.args.get("hub.verify_token")
-        challenge = request.args.get("hub.challenge")
 
-        if mode and token:
-            # Check the mode and token sent are correct
-            if mode == "subscribe" and token == verify_token:
-                print("WEBHOOK_VERIFIED")
-                return jsonify(challenge=challenge, message="Webhook verified"), 200
-            else:
-                return jsonify(error="Forbidden"), 403
-                return jsonify(error="Forbidden"), 403  # Respond with '403 Forbidden' if verify tokens do not match
+# handle incoming webhook messages
+def handle_message(request):
+    # Parse Request body in json format
+    body = request.get_json()
+    print(f"request body: {body}")
 
-    elif request.method == 'POST':
-        # POST API logic
-        body = request.get_json()
-
-        if body and "entry" in body:
-            entry = body["entry"][0]
-            if "changes" in entry:
-                change = entry["changes"][0]
-                if "value" in change and "messages" in change["value"]:
-                    message = change["value"]["messages"][0]
-                    phone_number_id = change["value"]["metadata"]["phone_number_id"]
-                    from_phone_number = message["from"]
-                    msg_body = message["text"]["body"]
-
-                    data_store[phone_number_id] = {"from": from_phone_number, "msg_body": msg_body}
-                    return jsonify(message="Webhook received"), 200
-
-        return jsonify(error="Invalid Request"), 400
+    try:
+        # info on WhatsApp text message payload:
+        # https://developers.facebook.com/docs/whatsapp/cloud-api/webhooks/payload-examples#text-messages
         if body.get("object"):
             if (
                 body.get("entry")
                 and body["entry"][0].get("changes")
-                and body["entry"][0]["changes"][0]
                 and body["entry"][0]["changes"][0].get("value")
                 and body["entry"][0]["changes"][0]["value"].get("messages")
                 and body["entry"][0]["changes"][0]["value"]["messages"][0]
             ):
-                phone_number_id = body["entry"][0]["changes"][0]["value"]["metadata"]["phone_number_id"]
-                from_phone_number = body["entry"][0]["changes"][0]["value"]["messages"][0]["from"]
-                msg_body = body["entry"][0]["changes"][0]["value"]["messages"][0]["text"]["body"]
-
-                # Save logic will come here
-                data_store[phone_number_id] = {"from": from_phone_number, "msg_body": msg_body}
-                return jsonify(message="Webhook received"), 200
+                return jsonify({"status": "ok"}), 200
         else:
-            return jsonify(error="No data found"), 200
+            # if the request is not a WhatsApp API event, return an error
+            return (
+                jsonify({"status": "error", "message": "Not a WhatsApp API event"}),
+                404,
+            )
+    # catch all other errors and return an internal server error
+    except Exception as e:
+        print(f"unknown error: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
-    return jsonify(error="Invalid Request"), 400
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# Required webhook verifictaion for WhatsApp
+# info on verification request payload:
+# https://developers.facebook.com/docs/graph-api/webhooks/getting-started#verification-requests
+def verify(request):
+    # Parse params from the webhook verification request
+    mode = request.args.get("hub.mode")
+    token = request.args.get("hub.verify_token")
+    challenge = request.args.get("hub.challenge")
+    # Check if a token and mode were sent
+    if mode and token:
+        # Check the mode and token sent are correct
+        if mode == "subscribe" and token == verify_token:
+            # Respond with 200 OK and challenge token from the request
+            print("WEBHOOK_VERIFIED")
+            return challenge, 200
+        else:
+            # Responds with '403 Forbidden' if verify tokens do not match
+            print("VERIFICATION_FAILED")
+            return jsonify({"status": "error", "message": "Verification failed"}), 403
+    else:
+        # Responds with '400 Bad Request' if verify tokens do not match
+        print("MISSING_PARAMETER")
+        return jsonify({"status": "error", "message": "Missing parameters"}), 400
+
+
+
+# Accepts POST and GET requests at /webhook endpoint
+@app.route("/webhook", methods=["POST", "GET"])
+def webhook():
+    if request.method == "GET":
+        return verify(request)
+    elif request.method == "POST":
+        return handle_message(request)
+
+
+
+if _name_ == "_main_":
+    app.run(debug=True, use_reloader=True)
