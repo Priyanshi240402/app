@@ -1,11 +1,17 @@
-
 from flask import Flask, jsonify, request
 
-app = Flask(_name_)
+app = Flask(__name__)
 
 # Verify Token defined when configuring the webhook
 verify_token = "ACE_TECH_TO_STOQ"
 
+# handle incoming webhook messages
+@app.route("/webhook", methods=["POST", "GET"])
+def webhook():
+    if request.method == "GET":
+        return verify(request)
+    elif request.method == "POST":
+        return handle_message(request)
 
 # handle incoming webhook messages
 def handle_message(request):
@@ -36,8 +42,7 @@ def handle_message(request):
         print(f"unknown error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-
-# Required webhook verifictaion for WhatsApp
+# Required webhook verification for WhatsApp
 # info on verification request payload:
 # https://developers.facebook.com/docs/graph-api/webhooks/getting-started#verification-requests
 def verify(request):
@@ -53,25 +58,19 @@ def verify(request):
             print("WEBHOOK_VERIFIED")
             return challenge, 200
         else:
-            # Responds with '403 Forbidden' if verify tokens do not match
+            # Respond with '403 Forbidden' if verify tokens do not match
             print("VERIFICATION_FAILED")
-            return jsonify({"status": "error", "message": "Verification failed"}), 403
+            return (
+                jsonify({"status": "error", "message": "Verification failed"}),
+                403,
+            )
     else:
-        # Responds with '400 Bad Request' if verify tokens do not match
+        # Respond with '400 Bad Request' if verify tokens do not match
         print("MISSING_PARAMETER")
-        return jsonify({"status": "error", "message": "Missing parameters"}), 400
+        return (
+            jsonify({"status": "error", "message": "Missing parameters"}),
+            400,
+        )
 
-
-
-# Accepts POST and GET requests at /webhook endpoint
-@app.route("/webhook", methods=["POST", "GET"])
-def webhook():
-    if request.method == "GET":
-        return verify(request)
-    elif request.method == "POST":
-        return handle_message(request)
-
-
-
-if _name_ == "_main_":
+if __name__ == "__main__":
     app.run(debug=True, use_reloader=True)
