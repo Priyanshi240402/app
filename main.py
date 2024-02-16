@@ -6,7 +6,7 @@ app = Flask(__name__)
 verify_token = "ACE_TECH_TO_STOQ"
 
 # handle incoming webhook messages
-@app.route("/webhook", methods=["POST", "GET"])
+@app.route("/", methods=["POST", "GET"])
 def webhook():
     if request.method == "GET":
         return verify(request)
