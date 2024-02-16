@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 
-app = Flask(_name_)
+app = Flask(__name__)
 
 # Verify Token defined when configuring the webhook
 verify_token = "ACE_TECH_TO_STOQ"
@@ -72,5 +72,5 @@ def webhook():
 
 
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     app.run(debug=True, use_reloader=True)
